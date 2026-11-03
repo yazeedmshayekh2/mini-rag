@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.responses import JSONResponse
 
-from ..controllers import DataController
+from ..controllers import DataController, ProjectController
 
 from .base import get_settings, Settings
+
+import aiofiles
 
 data_router = APIRouter(
     prefix="/api/v1/data",
@@ -15,6 +17,8 @@ data_router = APIRouter(
 async def upload_file(
     file: UploadFile,
     project_id: str,
+    data_controller: DataController,
+    project_controller: ProjectController,
     app_settings: Settings = Depends(get_settings),
 ):
 
@@ -30,9 +34,4 @@ async def upload_file(
             },
         )
 
-    return JSONResponse(
-        status_code=status.HTTP_202_ACCEPTED,
-        content={
-            "signal": result_signal,
-        },
-    )
+    project_dir_path = project_controller.get_project_path(project_id=project_id)
