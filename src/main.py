@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 
 load_dotenv(".env")
 
-from mini_rag.routes import base_router
+from routes import base_router
 
 app = FastAPI()
 
