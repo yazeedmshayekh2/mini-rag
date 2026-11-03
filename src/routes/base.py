@@ -1,8 +1,7 @@
 from fastapi import FastAPI, APIRouter
-import os
+from ..helpers.config import get_settings
 
-APP_NAME = os.getenv("APP_NAME")
-APP_VERSION = os.getenv("APP_VERSION")
+config = get_settings()
 
 base_router = APIRouter(
     prefix="/api/v1",
@@ -13,6 +12,6 @@ base_router = APIRouter(
 @base_router.get("/")
 def welcome():
     return {
-        "app_name": f"{APP_NAME}",
-        "app_version": f"{APP_VERSION}",
+        "app_name": f"{config.APP_NAME}",
+        "app_version": f"{config.APP_VERSION}",
     }
