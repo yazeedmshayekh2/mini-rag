@@ -13,6 +13,6 @@ base_router = APIRouter(
 @base_router.get("/")
 def welcome():
     return {
-        "App Name": f"{APP_NAME}",
-        "App Version": f"{APP_VERSION}",
+        "app_name": f"{APP_NAME}",
+        "app_version": f"{APP_VERSION}",
     }
