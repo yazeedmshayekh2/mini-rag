@@ -44,8 +44,6 @@ async def upload_file(
     )
     file_path = project_dir_path / file_path
 
-    print(f"File Path: {file_path}")
-
     try:
         async with aiofiles.open(file_path, "wb") as f:
             while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):
