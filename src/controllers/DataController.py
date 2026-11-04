@@ -24,25 +24,25 @@ class DataController(BaseController):
 
         return True, self.response_enum.FILE_UPLOAD_SUCESS.value
 
-    def generate_unique_filename(
+    def generate_unique_file_path(
         self,
         orig_filename: str,
         project_id: str,
     ):
         project_path = ProjectController().get_project_path(project_id=project_id)
 
-        cleaned_path = self.get_clean_filename(
+        cleaned_file_name = self.get_clean_filename(
             orig_filename=orig_filename,
         )
 
         while True:
             random_key = self.generate_random_string()
-            new_file_path = project_path / f"{random_key}_{cleaned_path}"
+            new_file_path = project_path / f"{random_key}_{cleaned_file_name}"
 
             if not new_file_path.exists():
                 break
 
-        return str(new_file_path)
+        return new_file_path, random_key + "_" + cleaned_file_name
 
     def get_clean_filename(
         self,

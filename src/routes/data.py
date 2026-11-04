@@ -8,6 +8,9 @@ from ..models import ResponseEnum
 from .base import get_settings, Settings
 
 import aiofiles
+import logging
+
+logger = logging.getLogger("uvicorn.error")
 
 data_router = APIRouter(
     prefix="/api/v1/data",
@@ -36,19 +39,31 @@ async def upload_file(
         )
 
     project_dir_path = project_controller.get_project_path(project_id=project_id)
-    unique_file_name = data_controller.generate_unique_filename(
+    file_path, file_id = data_controller.generate_unique_file_path(
         orig_filename=file.filename, project_id=project_id
     )
-    file_path = project_dir_path / unique_file_name
+    file_path = project_dir_path / file_path
 
     print(f"File Path: {file_path}")
 
-    async with aiofiles.open(file_path, "wb") as f:
-        while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):
-            await f.write(chunk)
+    try:
+        async with aiofiles.open(file_path, "wb") as f:
+            while chunk := await file.read(app_settings.FILE_DEFAULT_CHUNK_SIZE):
+                await f.write(chunk)
+    except Exception as e:
+
+        logger.error(f"Error while uploading file: {e}")
+
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "signal": ResponseEnum.FILE_UPLOAD_FAILED,
+            },
+        )
 
     return JSONResponse(
         content={
             "signal": ResponseEnum.FILE_UPLOAD_SUCESS.value,
+            "file_id": file_id,
         },
     )
