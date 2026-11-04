@@ -1,1 +1,1 @@
-from .enums import ResponseEnum
+from .enums import ResponseEnum, ProcessEnum

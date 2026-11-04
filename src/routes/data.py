@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends, UploadFile, status
 from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
 
-from ..controllers import DataController, ProjectController
+from ..controllers import DataController, ProjectController, ProcessController
 
 from ..models import ResponseEnum
 
 from .base import get_settings, Settings
+
+from .schemas import ProcessRequest
 
 import aiofiles
 import logging
@@ -64,4 +67,37 @@ async def upload_file(
             "signal": ResponseEnum.FILE_UPLOAD_SUCESS.value,
             "file_id": file_id,
         },
+    )
+
+
+@data_router.post("/process/{project_id}")
+async def process_file(
+    project_id: str,
+    process_request: ProcessRequest,
+):
+    file_id = process_request.file_id
+    chunk_size = process_request.chunk_size
+    overlap_size = process_request.overlap_size
+
+    process_controller = ProcessController(project_id=project_id)
+
+    chunks = process_controller.process_file_content(
+        file_id=file_id,
+        chunk_size=chunk_size,
+        overlap_size=overlap_size,
+    )
+
+    if chunks is None or len(chunks) == 0:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "signal": ResponseEnum.FILE_PROCESS_FAILED.value,
+            },
+        )
+
+    return JSONResponse(
+        content={
+            "signal": ResponseEnum.FILE_PROCESS_SUCCESS.value,
+            "content": jsonable_encoder(chunks),
+        }
     )
