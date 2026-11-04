@@ -14,8 +14,8 @@ class BaseController:
 
         self.response_enum = ResponseEnum
 
-        self.base_dir = Path(__file__).parent
-        self._file_dir = self.base_dir / "files"
+        self.base_dir = Path(__file__).parent.parent
+        self._file_dir = self.base_dir / "assets" / "files"
 
     def generate_random_string(
         self,

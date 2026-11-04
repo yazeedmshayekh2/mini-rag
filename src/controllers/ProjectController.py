@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from BaseController import BaseController
+from .BaseController import BaseController
 
 
 class ProjectController(BaseController):
@@ -12,4 +12,4 @@ class ProjectController(BaseController):
 
         project_dir.mkdir(parents=True, exist_ok=True)
 
-        return str(project_dir)
+        return project_dir
