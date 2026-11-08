@@ -14,6 +14,7 @@ dependencies = [
     "langchain-community==0.4.2",
     "pydantic==2.14.2",
     "pydantic-settings==2.16.2",
+    "pymongo==4.19.0",
     "pymupdf==2.1",
     "python-dotenv==1.2.4",
     "python-multipart==0.0.33",
