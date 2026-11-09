@@ -8,16 +8,19 @@ from .helpers.config import get_settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     settings = get_settings()
-    app.mongo_conn = AsyncMongoClient(settings.MONGO_URL)
-    app.db_client = app.mongo_db[settings.MONGODB_DATABASE]
 
-    await app.mongo_conn.admin.command("ping")
+    # 1. Initialize client and database
+    app.mongo_client = AsyncMongoClient(settings.MONGO_URL)
+    app.db = app.mongo_client[settings.MONGODB_DATABASE]
+
+    # 2. Use the exact same attribute name ('mongo_client')
+    await app.mongo_client.admin.command("ping")
 
     yield
 
-    await app.mongo_conn.close()
+    # 3. Close the same client reference on shutdown
+    await app.mongo_client.close()
 
 
 app = FastAPI(lifespan=lifespan)
