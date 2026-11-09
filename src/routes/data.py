@@ -89,6 +89,9 @@ async def process_file(
     file_id = process_request.file_id
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
+    do_reset = process_request.do_reset
+
+    chunk_model = ChunkModel(request.app.db)
 
     process_controller = ProcessController(project_id=project_id)
 
@@ -116,8 +119,14 @@ async def process_file(
         for i, chunk in enumerate(chunks)
     ]
 
-    chunk_model = ChunkModel(request.app.db)
+    if do_reset == 1:
+        await chunk_model.delete_chunks_by_project_id(project_id=project.id)
 
     no_records = await chunk_model.insert_many_chunks(chunks=file_chunks_records)
 
-    return no_records
+    return JSONResponse(
+        content={
+            "signal": ResponseEnum.FILE_PROCESS_SUCCESS.value,
+            "inserted_chunks": no_records,
+        }
+    )
