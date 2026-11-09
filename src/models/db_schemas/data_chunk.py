@@ -20,7 +20,7 @@ class DataChunk(BaseModel):
 
     INDEXES: ClassVar[List[IndexModel]] = [
         IndexModel(
-            [("chunk_project_id"), ASCENDING],
+            [("chunk_project_id", ASCENDING)],
             name="chunk_project_id_idx_1",
             unique=False,
         )
