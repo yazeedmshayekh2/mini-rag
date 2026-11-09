@@ -1,9 +1,12 @@
-from fastapi import APIRouter, Depends, UploadFile, status
+from fastapi import Request, APIRouter, Depends, UploadFile, status
 from fastapi.responses import JSONResponse
 from fastapi.encoders import jsonable_encoder
 
+from src.models.db_schemas.data_chunk import DataChunk
+
 from ..controllers import DataController, ProjectController, ProcessController
 
+from ..models import ProjectModel, ChunkModel
 from ..models import ResponseEnum
 
 from .base import get_settings, Settings
@@ -23,10 +26,14 @@ data_router = APIRouter(
 
 @data_router.post("/upload/{project_id}")
 async def upload_file(
+    request: Request,
     file: UploadFile,
     project_id: str,
     app_settings: Settings = Depends(get_settings),
 ):
+    project_model = ProjectModel(db=request.app.db)
+
+    project = await project_model.get_or_create_project(project_id=project_id)
 
     data_controller = DataController()
     project_controller = ProjectController()
@@ -72,9 +79,13 @@ async def upload_file(
 
 @data_router.post("/process/{project_id}")
 async def process_file(
+    request: Request,
     project_id: str,
     process_request: ProcessRequest,
 ):
+    project_model = ProjectModel(db=request.app.db)
+    project = await project_model.get_or_create_project(project_id=project_id)
+
     file_id = process_request.file_id
     chunk_size = process_request.chunk_size
     overlap_size = process_request.overlap_size
@@ -95,9 +106,18 @@ async def process_file(
             },
         )
 
-    return JSONResponse(
-        content={
-            "signal": ResponseEnum.FILE_PROCESS_SUCCESS.value,
-            "content": jsonable_encoder(chunks),
-        }
-    )
+    file_chunks_records = [
+        DataChunk(
+            chunk_text=chunk.page_content,
+            chunk_metadata=chunk.metadata,
+            chunk_order=i + 1,
+            chunk_project_id=project.id,
+        )
+        for i, chunk in enumerate(chunks)
+    ]
+
+    chunk_model = ChunkModel(request.app.db)
+
+    no_records = await chunk_model.insert_many_chunks(chunks=file_chunks_records)
+
+    return no_records

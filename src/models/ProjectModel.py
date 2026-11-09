@@ -4,7 +4,7 @@ from pymongo.asynchronous.collection import AsyncCollection
 from .BaseDataModel import BaseDataModel
 from .db_schemas import Project
 
-from enums import DataBaseEnum, PaginationEnum
+from .enums import DataBaseEnum
 
 import asyncio
 
@@ -23,8 +23,10 @@ class ProjectModel(BaseDataModel):
         self,
         project: Project,
     ):
-        result = await self.collection.insert_one(project.model_dump())
-        project._id = result.inserted_id
+        result = await self.collection.insert_one(
+            project.model_dump(by_alias=True, exclude_unset=True)
+        )
+        project.id = result.inserted_id
         return project
 
     async def get_or_create_project(

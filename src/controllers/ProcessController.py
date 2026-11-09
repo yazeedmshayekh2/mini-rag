@@ -37,6 +37,9 @@ class ProcessController(BaseController):
 
     def get_file_content(self, file_id: str) -> List[Document]:
         file_loader = self.get_file_loader(file_id=file_id)
+        if file_loader is None:
+            raise ValueError(f"The file loader is empty")
+
         return file_loader.load()
 
     def process_file_content(
