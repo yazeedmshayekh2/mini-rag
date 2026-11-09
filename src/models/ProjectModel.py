@@ -19,6 +19,15 @@ class ProjectModel(BaseDataModel):
             DataBaseEnum.COLLECTION_PROJECT_NAME.value
         ]
 
+    @classmethod
+    async def create_instance(cls, db: AsyncDatabase):
+        instance = cls(db)
+        await instance.init_collection()
+        return instance
+
+    async def init_collection(self):
+        return await self.collection.create_indexes(Project.INDEXES)
+
     async def create_project(
         self,
         project: Project,
