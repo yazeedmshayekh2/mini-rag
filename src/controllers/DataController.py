@@ -54,3 +54,17 @@ class DataController(BaseController):
         cleaned_file_name = re.sub(r"[^\w.]", "", cleaned_file_name)
 
         return cleaned_file_name
+
+    def get_file_size(
+        self,
+        file_path: Path,
+    ):
+        try:
+            size_bytes = file_path.stat().st_size
+            print(f"File size: {size_bytes} bytes")
+        except FileNotFoundError:
+            print("Error: The file does not exist.")
+        except PermissionError:
+            print("Error: You do not have permission to access this file.")
+
+        return size_bytes
