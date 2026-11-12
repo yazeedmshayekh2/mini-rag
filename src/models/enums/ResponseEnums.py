@@ -11,3 +11,5 @@ class ResponseEnum(Enum):
 
     FILE_PROCESS_SUCCESS = "file_processing_success"
     FILE_PROCESS_FAILED = "file_processing_failed"
+
+    NO_FILES = "no_files_to_process"
