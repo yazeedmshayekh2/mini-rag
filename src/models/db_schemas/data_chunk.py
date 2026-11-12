@@ -17,6 +17,7 @@ class DataChunk(BaseModel):
     chunk_metadata: dict
     chunk_order: int = Field(..., gt=0)
     chunk_project_id: ObjectId
+    chunk_asset_id: ObjectId
 
     INDEXES: ClassVar[List[IndexModel]] = [
         IndexModel(

@@ -109,21 +109,33 @@ async def process_file(
 
     process_controller = ProcessController(project_id=project_id)
 
+    project_files_ids = {}
     if file_id:
-        project_files_ids = [file_id]
+        asset_record = await asset_model.get_asset_record(
+            asset_project_id=project.id, asset_name=file_id
+        )
+
+        if not asset_record:
+            return JSONResponse(
+                status_code=status.HTTP_404_NOT_FOUND,
+                content={
+                    "signal": ResponseEnum.FILE_ID_ERROR.value,
+                },
+            )
+
+        project_files_ids[asset_record.id] = asset_record.asset_name
     else:
         project_files = await asset_model.get_all_project_assets(
             project_id=project.id,
             asset_type=AssetTypeEnum.File.value,
         )
+        project_files_ids = {record.id: record.asset_name for record in project_files}
 
-        project_files_ids = [record["asset_name"] for record in project_files]
-
-    if project_files_ids is None or len(project_files_ids) == 0:
+    if not project_files_ids:
         return JSONResponse(
             status_code=status.HTTP_404_NOT_FOUND,
             content={
-                "signal": ResponseEnum.NO_FILES.value,
+                "signal": ResponseEnum.NO_FILES_ERROR.value,
             },
         )
 
@@ -132,7 +144,7 @@ async def process_file(
 
     total_inserted = 0
     failed_files = []
-    for file_id in project_files_ids:
+    for asset_id, file_id in project_files_ids.items():
         try:
             chunks = process_controller.process_file_content(
                 file_id=file_id,
@@ -154,6 +166,7 @@ async def process_file(
                 chunk_metadata=chunk.metadata,
                 chunk_order=i + 1,
                 chunk_project_id=project.id,
+                chunk_asset_id=asset_id,
             )
             for i, chunk in enumerate(chunks)
         ]
