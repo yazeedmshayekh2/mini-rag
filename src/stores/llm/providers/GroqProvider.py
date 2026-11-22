@@ -14,7 +14,7 @@ class GroqProvider(GenerationProvider):
         self,
         api_key: str,
         default_input_max_chars: int = 10_000,
-        default_generation_max_output_tokens: int = 1000,
+        default_generation_max_output_tokens: int = 4096,
         default_generation_temperature: float = 0.1,
         reasoning_effort: (
             str | None
@@ -45,7 +45,8 @@ class GroqProvider(GenerationProvider):
     ) -> dict:
         if not self.generation_model_id:
             raise RuntimeError("Generation model is not set for GroqProvider")
-        return {
+
+        request = {
             "model": self.generation_model_id,
             "messages": [
                 *(chat_history or []),
@@ -59,6 +60,11 @@ class GroqProvider(GenerationProvider):
                 else temperature
             ),
         }
+
+        if self.reasoning_effort:
+            request["reasoning_effort"] = self.reasoning_effort
+
+        return request
 
     async def generate_text(
         self, prompt, chat_history=None, max_output_tokens=None, temperature=None

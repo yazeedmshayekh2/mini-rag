@@ -1,6 +1,8 @@
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from functools import lru_cache
+
 from src.stores.llm.LLMEnums import LLMProvider
 
 
@@ -26,6 +28,7 @@ class Settings(BaseSettings):
     INPUT_DEFAULT_MAX_CHARS: int = 10_000
     GENERATION_DEFAULT_MAX_TOKENS: int = 4096
     GENERATION_DEFAULT_TEMPERATURE: float = 0.1
+    GENERATION_REASONING_EFFORT: str | None = "low"
 
     # Ollama: embeddings
     OLLAMA_HOST: str = "http://localhost:11434"
@@ -39,5 +42,6 @@ class Settings(BaseSettings):
         env_file = ".env"
 
 
-def get_settings():
+@lru_cache
+def get_settings() -> Settings:
     return Settings()

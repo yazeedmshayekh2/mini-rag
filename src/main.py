@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from pymongo import AsyncMongoClient
 
+from src.stores.llm import LLMProviderFactory
+
 from .routes import base_router, data_router
 from .helpers.config import get_settings
 
@@ -16,6 +18,10 @@ async def lifespan(app: FastAPI):
 
     # 2. Use the exact same attribute name ('mongo_client')
     await app.mongo_client.admin.command("ping")
+
+    factory = LLMProviderFactory(settings=settings)
+    app.generation_client = factory.create_generation_client()
+    app.embedding_client = factory.create_embedding_client()
 
     yield
 
