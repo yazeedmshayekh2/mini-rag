@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 
+from ..AsyncResource import AsyncResource
 from .VectorDBSchemas import (
     CollectionInfo,
     CollectionSpec,
@@ -11,14 +12,11 @@ from .VectorDBSchemas import (
 )
 
 
-class VectorStore(ABC):
+class VectorStore(AsyncResource):
 
     # ---------- lifecycle ----------
     @abstractmethod
     async def connect(self) -> None: ...
-
-    @abstractmethod
-    async def close(self) -> None: ...
 
     # ---------- collection management ----------
     @abstractmethod
@@ -58,6 +56,3 @@ class VectorStore(ABC):
     async def __aenter__(self):
         await self.connect()
         return self
-
-    async def __aexit__(self, *exc):
-        await self.close()

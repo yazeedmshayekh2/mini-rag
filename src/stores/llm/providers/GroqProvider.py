@@ -31,6 +31,14 @@ class GroqProvider(GenerationProvider):
         self.reasoning_effort = reasoning_effort
         self.generation_model_id: str | None = None
 
+        self._closed = False
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        await self.client.close()
+
     def set_generation_model(self, model_id: str) -> None:
         self.generation_model_id = model_id
 

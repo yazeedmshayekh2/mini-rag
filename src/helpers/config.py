@@ -1,3 +1,5 @@
+from src.stores.vectordb.VectorDBEnums import VectorDBProvider
+
 from pydantic import SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -38,8 +40,17 @@ class Settings(BaseSettings):
     EMBEDDING_BATCH_SIZE: int = 32
     EMBEDDING_NUM_CTX: int = 8192
 
-    class Config:
-        env_file = ".env"
+    # Vector store
+    VECTOR_DB_BACKEND: VectorDBProvider = VectorDBProvider.QDRANT
+    VECTOR_DB_COLLECTION_PREFIX: str = "chunks"
+
+    # Qdrant
+    QDRANT_URL: str = "http://localhost:6333"
+    QDRANT_API_KEY: SecretStr | None = None
+    QDRANT_TIMEOUT: int = 30
+    QDRANT_UPSERT_BATCH_SIZE: int = 256
+
+    model_config = SettingsConfigDict(env_file=".env")
 
 
 @lru_cache

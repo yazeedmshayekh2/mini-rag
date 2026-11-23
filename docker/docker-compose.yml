@@ -18,7 +18,7 @@ services:
     restart: always
 
   qdrant:
-    image: qdrant/qdrant:v1.15.0 # pin a version; check Docker Hub for the latest
+    image: qdrant/qdrant:v1.20.0 # pin a version; check Docker Hub for the latest
     container_name: qdrant
     ports:
       - "6333:6333" # REST API + web dashboard

@@ -41,6 +41,14 @@ class OllamaProvider(EmbeddingProvider):
         self.embedding_model_id: str | None = None
         self.embedding_size: int | None = None
 
+        self._closed = False
+
+    async def close(self) -> None:
+        if self._closed:
+            return
+        self._closed = True
+        await self.client.close()
+
     def set_embedding_model(self, model_id: str, embedding_size: int) -> None:
         self.embedding_model_id = model_id
         self.embedding_size = embedding_size

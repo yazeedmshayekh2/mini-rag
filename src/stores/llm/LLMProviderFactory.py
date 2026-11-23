@@ -1,9 +1,14 @@
-from src.helpers.config import Settings
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from .LLMEnums import LLMProvider
 from .LLMInterace import GenerationProvider, EmbeddingProvider
 from .providers.GroqProvider import GroqProvider
 from .providers.OllamaProvider import OllamaProvider
+
+if TYPE_CHECKING:  # seen by your IDE and type checker, never executed at runtime
+    from src.helpers.config import Settings
 
 
 class LLMProviderFactory:

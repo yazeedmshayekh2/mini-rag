@@ -11,6 +11,8 @@ from ..models import ResponseEnum, AssetTypeEnum
 
 from .base import get_settings, Settings
 
+from ..dependencies import DbDep
+
 from .schemas import ProcessRequest
 
 import aiofiles
@@ -31,7 +33,7 @@ async def upload_file(
     project_id: str,
     app_settings: Settings = Depends(get_settings),
 ):
-    project_model = await ProjectModel.create_instance(db=request.app.db)
+    project_model = await ProjectModel.create_instance(db=request.app.state.db)
 
     project = await project_model.get_or_create_project(project_id=project_id)
 
@@ -69,7 +71,7 @@ async def upload_file(
             },
         )
 
-    asset_model = await AssetModel.create_instance(db=request.app.db)
+    asset_model = await AssetModel.create_instance(db=request.app.state.db)
 
     file_size = data_controller.get_file_size(file_path=file_path)
 
@@ -96,7 +98,7 @@ async def process_file(
     project_id: str,
     process_request: ProcessRequest,
 ):
-    project_model = await ProjectModel.create_instance(db=request.app.db)
+    project_model = await ProjectModel.create_instance(db=request.app.state.db)
     project = await project_model.get_or_create_project(project_id=project_id)
 
     file_id = process_request.file_id
@@ -104,8 +106,8 @@ async def process_file(
     overlap_size = process_request.overlap_size
     do_reset = process_request.do_reset
 
-    chunk_model = await ChunkModel.create_instance(db=request.app.db)
-    asset_model = await AssetModel.create_instance(db=request.app.db)
+    chunk_model = await ChunkModel.create_instance(db=request.app.state.db)
+    asset_model = await AssetModel.create_instance(db=request.app.state.db)
 
     process_controller = ProcessController(project_id=project_id)
 

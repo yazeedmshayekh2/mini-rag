@@ -1,9 +1,11 @@
+from ..AsyncResource import AsyncResource
+
 from abc import ABC, abstractmethod
 from typing import AsyncIterator
 from .LLMEnums import DocumentType, MessageRole
 
 
-class GenerationProvider(ABC):
+class GenerationProvider(AsyncResource):
 
     @abstractmethod
     def set_generation_model(self, model_id: str) -> None: ...
@@ -30,11 +32,11 @@ class GenerationProvider(ABC):
         prompt: str,
         chat_history: list[dict] | None = None,
         max_output_tokens: int | None = None,
-        temprature: float | None = None,
+        temperature: float | None = None,
     ) -> AsyncIterator[str]: ...
 
 
-class EmbeddingProvider(ABC):
+class EmbeddingProvider(AsyncResource):
 
     @abstractmethod
     def set_embedding_model(
