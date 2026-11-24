@@ -27,6 +27,8 @@ class Asset(BaseModel):
     asset_indexed_at: Optional[datetime] = None
     asset_index_error: Optional[str] = None
 
+    asset_index_started_at: Optional[datetime] = None
+
     INDEXES: ClassVar[List[IndexModel]] = [
         IndexModel(
             [

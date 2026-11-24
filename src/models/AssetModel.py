@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 from bson import ObjectId
 
@@ -144,3 +144,35 @@ class AssetModel(BaseDataModel):
             {"_id": asset_id},
             {"$set": fields},
         )
+
+    async def try_claim_indexing(
+        self,
+        asset_id: ObjectId,
+        collection: str,
+        stale_after: timedelta = timedelta(minutes=30),
+    ) -> bool:
+        """
+        Atomically move the asset to INDEXING. False = another run holds a live claim.
+        """
+        now = datetime.now(timezone.utc)
+        result = await self.collection.update_one(
+            {
+                "_id": asset_id,
+                "$or": [
+                    {"asset_index_status": {"$ne": IndexStatusEnum.INDEXING.value}},
+                    {
+                        "asset_index_started_at": {"$lt": now - stale_after}
+                    },  # crashed run
+                ],
+            },
+            {
+                "$set": {
+                    "asset_index_status": IndexStatusEnum.INDEXING.value,
+                    "asset_index_collection": collection,
+                    "asset_index_started_at": now,
+                    "asset_index_error": None,
+                }
+            },
+        )
+
+        return result.matched_count == 1
