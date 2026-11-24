@@ -83,8 +83,8 @@ class AssetModel(BaseDataModel):
 
         record = await self.collection.find_one(
             {
-                "_id": project_id,
-                "asset_project_id": asset_id,
+                "_id": asset_id,
+                "asset_project_id": project_id,
             }
         )
 
