@@ -173,9 +173,13 @@ async def process_file(
             for i, chunk in enumerate(chunks)
         ]
 
+        await chunk_model.delete_chunks_by_asset_id(
+            project_id=project.id, asset_id=asset_id
+        )
         total_inserted += await chunk_model.insert_many_chunks(
             chunks=file_chunks_records
         )
+        await asset_model.mark_pending(asset_id)
 
     if total_inserted == 0:
         return JSONResponse(

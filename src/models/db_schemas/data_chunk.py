@@ -24,5 +24,13 @@ class DataChunk(BaseModel):
             [("chunk_project_id", ASCENDING)],
             name="chunk_project_id_idx_1",
             unique=False,
-        )
+        ),
+        IndexModel(
+            [
+                ("chunk_project_id", ASCENDING),
+                ("chunk_asset_id", ASCENDING),
+                ("_id", ASCENDING),
+            ],
+            name="chunk_project_asset_id_idx_1",
+        ),
     ]

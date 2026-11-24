@@ -7,7 +7,9 @@ from .db_schemas import DataChunk
 from .enums import DataBaseEnum
 
 from bson.objectid import ObjectId
-from pymongo import InsertOne
+from pymongo import ASCENDING, InsertOne
+
+from collections.abc import AsyncIterator
 
 
 class ChunkModel(BaseDataModel):
@@ -69,5 +71,49 @@ class ChunkModel(BaseDataModel):
         query = {"chunk_project_id": project_id}
 
         result = await self.collection.delete_many(query)
+
+        return result.deleted_count
+
+    async def iter_asset_chunks(
+        self,
+        project_id: ObjectId,
+        asset_id: ObjectId,
+        page_size: int = 64,
+    ) -> AsyncIterator[list[DataChunk]]:
+        """
+        Yield an asset's chunks page by page (keyset pagination on _id).
+        Memory stays constant no matter how many chunks the asset has.
+        """
+
+        last_id: ObjectId | None = None
+        while True:
+            query = {"chunk_project_id": project_id, "chunk_asset_id": asset_id}
+            if last_id is not None:
+                query["_id"] = {"$gt": last_id}
+
+            records = (
+                await self.collection.find(query)
+                .sort("_id", ASCENDING)
+                .limit(page_size)
+                .to_list(length=page_size)
+            )
+
+            if not records:
+                return
+
+            yield [DataChunk(**record) for record in records]
+            last_id = records[-1]["_id"]
+
+    async def count_asset_chunks(self, project_id: ObjectId, asset_id: ObjectId) -> int:
+        return await self.collection.count_documents(
+            {"chunk_project_id": project_id, "chunk_asset_id": asset_id}
+        )
+
+    async def delete_chunks_by_asset_id(
+        self, project_id: ObjectId, asset_id: ObjectId
+    ) -> int:
+        result = await self.collection.delete_many(
+            {"chunk_project_id": project_id, "chunk_asset_id": asset_id}
+        )
 
         return result.deleted_count

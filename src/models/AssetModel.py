@@ -1,3 +1,5 @@
+from datetime import datetime, timezone
+
 from bson import ObjectId
 
 from .BaseDataModel import BaseDataModel
@@ -6,7 +8,7 @@ from pymongo.asynchronous.collection import AsyncCollection
 
 from .db_schemas import Asset
 
-from src.models.enums import DataBaseEnum
+from src.models.enums import DataBaseEnum, IndexStatusEnum
 
 
 class AssetModel(BaseDataModel):
@@ -72,3 +74,73 @@ class AssetModel(BaseDataModel):
             return Asset(**record)
 
         return None
+
+    async def get_asset_by_id(
+        self,
+        project_id: ObjectId,
+        asset_id: ObjectId,
+    ) -> Asset | None:
+
+        record = await self.collection.find_one(
+            {
+                "_id": project_id,
+                "asset_project_id": asset_id,
+            }
+        )
+
+        return Asset(**record) if record else None
+
+    async def mark_indexing(
+        self,
+        asset_id: ObjectId,
+        collection: str,
+    ) -> None:
+        await self._set_index_state(
+            asset_id,
+            {
+                "asset_index_status": IndexStatusEnum.INDEXING.value,
+                "asset_index_collection": collection,
+                "asset_index_error": None,
+            },
+        )
+
+    async def mark_indexed(
+        self, asset_id: ObjectId, collection: str, chunks: int
+    ) -> None:
+        await self._set_index_state(
+            asset_id,
+            {
+                "asset_index_status": IndexStatusEnum.INDEXED.value,
+                "asset_index_collection": collection,
+                "asset_indexed_chunks": chunks,
+                "asset_indexed_at": datetime.now(timezone.utc),
+                "asset_index_error": None,
+            },
+        )
+
+    async def mark_failed(self, asset_id: ObjectId, error: str) -> None:
+        await self._set_index_state(
+            asset_id,
+            {
+                "asset_index_status": IndexStatusEnum.FAILED.value,
+                "asset_index_error": error[
+                    :500
+                ],  # cap: never store huge tracebacks in a document
+            },
+        )
+
+    async def mark_pending(self, asset_id: ObjectId) -> None:
+        """Call after (re)processing a file: its chunks changed, so its vectors are stale."""
+        await self._set_index_state(
+            asset_id,
+            {
+                "asset_index_status": IndexStatusEnum.PENDING.value,
+                "asset_indexed_chunks": 0,
+            },
+        )
+
+    async def _set_index_state(self, asset_id: ObjectId, fields: dict) -> None:
+        await self.collection.update_one(
+            {"_id": asset_id},
+            {"$set": fields},
+        )

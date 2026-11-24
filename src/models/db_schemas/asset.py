@@ -4,6 +4,8 @@ from bson import ObjectId
 from pydantic import BaseModel, ConfigDict, Field
 from pymongo import ASCENDING, IndexModel
 
+from src.models.enums import IndexStatusEnum
+
 
 class Asset(BaseModel):
     model_config = ConfigDict(arbitrary_types_allowed=True)
@@ -17,6 +19,13 @@ class Asset(BaseModel):
     asset_pushed_at: datetime = Field(
         default_factory=lambda: datetime.now(timezone.utc)
     )
+
+    # ---------- indexing state ----------
+    asset_index_status: IndexStatusEnum = IndexStatusEnum.PENDING
+    asset_index_collection: Optional[str] = None
+    asset_indexed_chunks: int = 0
+    asset_indexed_at: Optional[datetime] = None
+    asset_index_error: Optional[str] = None
 
     INDEXES: ClassVar[List[IndexModel]] = [
         IndexModel(
