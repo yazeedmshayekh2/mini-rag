@@ -128,7 +128,7 @@ async def process_file(
         project_files_ids[asset_record.id] = asset_record.asset_name
     else:
         project_files = await asset_model.get_all_project_assets(
-            project_id=project.id,
+            asset_project_id=project.id,
             asset_type=AssetTypeEnum.File.value,
         )
         project_files_ids = {record.id: record.asset_name for record in project_files}
