@@ -90,20 +90,6 @@ class AssetModel(BaseDataModel):
 
         return Asset(**record) if record else None
 
-    async def mark_indexing(
-        self,
-        asset_id: ObjectId,
-        collection: str,
-    ) -> None:
-        await self._set_index_state(
-            asset_id,
-            {
-                "asset_index_status": IndexStatusEnum.INDEXING.value,
-                "asset_index_collection": collection,
-                "asset_index_error": None,
-            },
-        )
-
     async def mark_indexed(
         self, asset_id: ObjectId, collection: str, chunks: int
     ) -> None:
