@@ -79,7 +79,7 @@ def get_indexing_service(
 IndexingServiceDep = Annotated[IndexingService, Depends(get_indexing_service)]
 
 
-def get_retreival_service(
+def get_retrieval_service(
     embedder: EmbeddingDep,
     vector_store: VectorStoreDep,
     collection: ChunksCollectionDep,
@@ -94,4 +94,4 @@ def get_retreival_service(
     )
 
 
-RetrievalServiceDep = Annotated[RetrievalService, Depends(get_retreival_service)]
+RetrievalServiceDep = Annotated[RetrievalService, Depends(get_retrieval_service)]

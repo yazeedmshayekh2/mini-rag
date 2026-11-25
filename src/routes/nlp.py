@@ -4,8 +4,6 @@ import logging
 from bson import ObjectId
 from fastapi import APIRouter, BackgroundTasks, Request, status, HTTPException
 
-from src.models.db_schemas.project import Project
-
 from ..dependencies import (
     ChunksCollectionDep,
     DbDep,
@@ -13,7 +11,6 @@ from ..dependencies import (
     ProjectDep,
     RetrievalServiceDep,
     VectorStoreDep,
-    RetrievalService,
 )
 from ..models import AssetModel
 from ..models.enums import IndexStatusEnum, ResponseEnum
