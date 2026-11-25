@@ -75,3 +75,7 @@ class ProjectModel(BaseDataModel):
         total_pages = (total_documents + page_size - 1) // page_size
 
         return projects, total_pages
+
+    async def get_project_by_public_id(self, project_id: str) -> Project | None:
+        record = await self.collection.find_one({"project_id": project_id})
+        return Project(**record) if record else None

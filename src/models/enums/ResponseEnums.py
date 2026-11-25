@@ -14,3 +14,9 @@ class ResponseEnum(Enum):
 
     NO_FILES_ERROR = "no_files_to_process"
     FILE_ID_ERROR = "no_file_found_with_this_id"
+
+    PROJECT_NOT_FOUND = "project_not_found"
+    INDEXING_STARTED = "indexing_started"
+    INDEX_INFO_SUCCESS = "index_info_success"
+    VECTORDB_UNAVAILABLE = "vectordb_unavailable"
+    VECTORDB_ERROR = "vectordb_error"

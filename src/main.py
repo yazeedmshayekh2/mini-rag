@@ -5,10 +5,18 @@ from fastapi import FastAPI
 from pymongo import AsyncMongoClient
 
 from .helpers.config import get_settings
-from .routes import base_router, data_router
+from .routes import base_router, data_router, nlp_router
 from .stores.llm.LLMProviderFactory import LLMProviderFactory
 from .stores.vectordb.VectorDBProviderFactory import VectorDBProviderFactory
 from .stores.vectordb.collections import chunks_collection_spec
+
+from .helpers.errors import register_exception_hanlders
+from .models import ProjectModel, AssetModel, ChunkModel
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s %(name)s: %(message)s",
+)
 
 logger = logging.getLogger(__name__)
 
@@ -26,6 +34,9 @@ async def lifespan(app: FastAPI):
         await mongo_client.admin.command("ping")
         app.state.mongo_client = mongo_client
         app.state.db = mongo_client[settings.MONGODB_DATABASE]
+
+        for model_cls in (ProjectModel, AssetModel, ChunkModel):
+            await model_cls(app.state.db).init_collection()
 
         # 2. LLM providers
         llm_factory = LLMProviderFactory(settings=settings)
@@ -58,5 +69,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+register_exception_hanlders(app=app)
 app.include_router(base_router)
 app.include_router(data_router)
+app.include_router(nlp_router)

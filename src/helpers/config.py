@@ -50,6 +50,9 @@ class Settings(BaseSettings):
     QDRANT_TIMEOUT: int = 30
     QDRANT_UPSERT_BATCH_SIZE: int = 256
 
+    # Indexing
+    INDEXING_PAGE_SIZE: int = 64
+
     model_config = SettingsConfigDict(env_file=".env")
 
 

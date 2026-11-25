@@ -162,3 +162,43 @@ class AssetModel(BaseDataModel):
         )
 
         return result.matched_count == 1
+
+    async def get_index_summary(self, project_id: ObjectId) -> dict[str, dict]:
+        """Count assets and indexed chunks per status, computed in Mongo (one round trip)."""
+        cursor = await self.collection.aggregate(
+            [
+                {"$match": {"asset_project_id": project_id}},
+                {
+                    "$group": {
+                        "_id": "$asset_index_status",
+                        "assets": {"$sum": 1},
+                        "chunks": {"$sum": "$asset_indexed_chunks"},
+                    }
+                },
+            ]
+        )
+        rows = await cursor.to_list()
+        # assets created before 4a have no status field -> they are pending
+        return {
+            (row["_id"] or IndexStatusEnum.PENDING.value): {
+                "assets": row["assets"],
+                "chunks": row["chunks"],
+            }
+            for row in rows
+        }
+
+    async def get_failed_assets(
+        self, project_id: ObjectId, limit: int = 20
+    ) -> list[Asset]:
+        records = (
+            await self.collection.find(
+                {
+                    "asset_project_id": project_id,
+                    "asset_index_status": IndexStatusEnum.FAILED.value,
+                }
+            )
+            .limit(limit)
+            .to_list(length=limit)
+        )
+
+        return [Asset(**r) for r in records]
