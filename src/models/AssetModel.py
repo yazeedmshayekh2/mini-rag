@@ -202,3 +202,11 @@ class AssetModel(BaseDataModel):
         )
 
         return [Asset(**r) for r in records]
+
+    async def get_asset_by_names(
+        self, project_id: ObjectId, names: list[str]
+    ) -> list[Asset]:
+        records = await self.collection.find(
+            {"asset_project_id": project_id, "asset_name": {"$in": names}}
+        ).to_list(length=len(names))
+        return [Asset(**r) for r in records]

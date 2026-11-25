@@ -2,7 +2,7 @@ import asyncio
 import logging
 
 from bson import ObjectId
-from fastapi import APIRouter, BackgroundTasks, Request, status
+from fastapi import APIRouter, BackgroundTasks, Request, status, HTTPException
 
 from src.models.db_schemas.project import Project
 
@@ -11,7 +11,9 @@ from ..dependencies import (
     DbDep,
     IndexingServiceDep,
     ProjectDep,
+    RetrievalServiceDep,
     VectorStoreDep,
+    RetrievalService,
 )
 from ..models import AssetModel
 from ..models.enums import IndexStatusEnum, ResponseEnum
@@ -22,6 +24,9 @@ from .schemas import (
     IndexPushResponse,
     PushRequest,
     StatusBucket,
+    SearchHit,
+    SearchRequest,
+    SearchResponse,
 )
 
 logger = logging.getLogger(__name__)
@@ -95,4 +100,39 @@ async def index_info(
             FailedAsset(asset_name=a.asset_name, error=a.asset_index_error)
             for a in failed
         ],
+    )
+
+
+@nlp_router.post("/index/search/{project_id}", response_model=SearchResponse)
+async def search_index(
+    project: ProjectDep,
+    search: SearchRequest,
+    service: RetrievalServiceDep,
+    db: DbDep,
+):
+    asset_ids = None
+    if search.file_ids:
+        assets = await AssetModel(db).get_asset_by_names(project.id, search.file_ids)
+        missing = set(search.file_ids) - {a.asset_name for a in assets}
+        if missing:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail={
+                    "signal": ResponseEnum.ASSET_NOT_FOUND.value,
+                    "missing": sorted(missing),
+                },
+            )
+        asset_ids = [a.id for a in assets]
+
+    chunks = await service.retrieve(
+        project.id,
+        search.query,
+        top_k=search.top_k,
+        asset_ids=asset_ids,
+    )
+
+    return SearchResponse(
+        signal=ResponseEnum.SEARCH_SUCCESS.value,
+        project_id=project.project_id,
+        hits=[SearchHit.from_chunk(c) for c in chunks],
     )

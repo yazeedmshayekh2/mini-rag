@@ -20,3 +20,8 @@ class ResponseEnum(Enum):
     INDEX_INFO_SUCCESS = "index_info_success"
     VECTORDB_UNAVAILABLE = "vectordb_unavailable"
     VECTORDB_ERROR = "vectordb_error"
+
+    SEARCH_SUCCESS = "search_success"
+    ASSET_NOT_FOUND = "asset_not_found"
+    LLM_UNAVAILABLE = "llm_unavailable"
+    LLM_ERROR = "llm_error"

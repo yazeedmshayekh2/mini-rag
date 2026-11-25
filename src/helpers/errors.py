@@ -8,6 +8,7 @@ from src.stores.vectordb.VectorDBExceptions import (
     VectorStoreConnectionError,
     VectorStoreError,
 )
+from src.stores.llm.LLMExceptions import LLMProviderError, ProviderUnavailableError
 
 logger = logging.getLogger(__name__)
 
@@ -26,4 +27,19 @@ def register_exception_hanlders(app: FastAPI) -> None:
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content={"signal": ResponseEnum.VECTORDB_ERROR.value},
+        )
+
+    @app.exception_handler(LLMProviderError)
+    async def llm_provider_error_handler(request: Request, exc: LLMProviderError):
+        if isinstance(exc, ProviderUnavailableError):
+            logger.warning("LLM provider unavailable on %s: %s", request.url.path, exc)
+            return JSONResponse(
+                status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+                content={"signal": ResponseEnum.LLM_UNAVAILABLE.value},
+                headers={"Retry-After": "10"},
+            )
+        logger.error("LLM provider error on %s", request.url.path, exc_info=exc)
+        return JSONResponse(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            content={"signal": ResponseEnum.LLM_ERROR.value},
         )

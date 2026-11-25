@@ -10,6 +10,7 @@ from src.models.enums import ResponseEnum
 from src.services.IndexingService import IndexingService
 from src.stores.llm.LLMInterace import EmbeddingProvider, GenerationProvider
 from src.stores.vectordb.VectorDBInterface import VectorStore
+from src.services.RetrievalService import RetrievalService
 
 
 # ---------- app-scoped singletons (created once in lifespan) ----------
@@ -76,3 +77,21 @@ def get_indexing_service(
 
 
 IndexingServiceDep = Annotated[IndexingService, Depends(get_indexing_service)]
+
+
+def get_retreival_service(
+    embedder: EmbeddingDep,
+    vector_store: VectorStoreDep,
+    collection: ChunksCollectionDep,
+    settings: SettingsDep,
+) -> RetrievalService:
+    return RetrievalService(
+        embedder=embedder,
+        vector_store=vector_store,
+        collection=collection,
+        default_top_k=settings.RETRIEVAL_TOP_K,
+        score_threshold=settings.RETRIEVAL_SCORE_THRESHOLD,
+    )
+
+
+RetrievalServiceDep = Annotated[RetrievalService, Depends(get_retreival_service)]

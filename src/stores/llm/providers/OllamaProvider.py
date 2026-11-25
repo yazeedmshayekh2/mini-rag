@@ -1,8 +1,13 @@
 import logging
 
-from ollama import AsyncClient
+from contextlib import contextmanager
+
+import httpx
+
+from ollama import AsyncClient, ResponseError
 
 from ..LLMInterace import EmbeddingProvider
+from ..LLMExceptions import ProviderResponseError, ProviderUnavailableError
 from ..LLMEnums import DocumentType
 from ..text_utils import normalize_for_embedding
 
@@ -21,6 +26,17 @@ EMBEDDING_PREFIXES: dict[str, dict[DocumentType, str]] = {
         DocumentType.QUERY: "query: ",
     },
 }
+
+
+@contextmanager
+def _translate_errors():
+    """Convert ollama/httpx exceptions to domain exceptions."""
+    try:
+        yield
+    except (ConnectionError, httpx.TimeoutException) as e:
+        raise ProviderUnavailableError(f"Ollama unreachable: {e}") from e
+    except ResponseError as e:
+        raise ProviderResponseError(f"Ollama error {e.status_code}: {e.error}") from e
 
 
 class OllamaProvider(EmbeddingProvider):
@@ -76,11 +92,12 @@ class OllamaProvider(EmbeddingProvider):
 
         for start in range(0, len(inputs), self.embedding_batch_size):
             batch = inputs[start : start + self.embedding_batch_size]
-            response = await self.client.embed(
-                model=self.embedding_model_id,
-                input=batch,
-                options={"num_ctx": self.embedding_num_ctx},
-            )
+            with _translate_errors():
+                response = await self.client.embed(
+                    model=self.embedding_model_id,
+                    input=batch,
+                    options={"num_ctx": self.embedding_num_ctx},
+                )
             if len(response.embeddings) != len(batch):
                 raise RuntimeError(
                     f"Ollama returned {len(response.embeddings)} embeddings for {len(batch)} inputs"

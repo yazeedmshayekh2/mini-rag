@@ -53,6 +53,12 @@ class Settings(BaseSettings):
     # Indexing
     INDEXING_PAGE_SIZE: int = 64
 
+    # Retrieval
+    RETRIEVAL_TOP_K: int = 5
+    RETRIEVAL_SCORE_THRESHOLD: float | None = (
+        None  # set from an eval set, not by guessing
+    )
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
